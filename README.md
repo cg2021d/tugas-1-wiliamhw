@@ -1,7 +1,7 @@
 # tugas-1-wiliamhw
-Nama: William Handi Wijaya
-NRP: 05111940000087
-Barang: Dus
+Nama: William Handi Wijaya  
+NRP: 05111940000087  
+Barang: Dus  
 
 ### Depan Atas
 ![depan](img/depan.jpg)
