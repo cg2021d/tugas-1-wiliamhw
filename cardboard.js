@@ -1,79 +1,80 @@
 class Cardboard
 {
-  constructor(gl, center, width, height, curveWidth) {
+  constructor(gl, shaderProgram, data) {
     this.gl = gl;
-    this.center = center;
-    this.width = width;
-    this.height = height;
-    this.curveWidth = curveWidth;
+    this.shaderProgram = shaderProgram;
+    this.center = data.center;
+    this.width = data.width;
+    this.height = data.height;
+    this.curveWidth = data.curveWidth;
+    this.color = data.color;
   }
 
   get vertices() {
-    const right = this.center['x'] + this.width/2;
-    const left = this.center['x'] - this.width/2;
-    const top = this.center['y'] + this.height/2;
-    const bottom = this.center['y'] - this.height/2;
+    const right = this.center.x + this.width/2;
+    const left = this.center.x - this.width/2;
+    const top = this.center.y + this.height.top/2;
+    const bottom = this.center.y - this.height.bottom/2;
     const middle = {
-      right: [this.center['x'] + this.width/2 + this.curveWidth, this.center['y']],
-      left : [this.center['x'] - this.width/2 - this.curveWidth, this.center['y']],
+      right: [this.center.x + this.width/2 + this.curveWidth, this.center.y],
+      left : [this.center.x - this.width/2 - this.curveWidth, this.center.y],
     }
 
     return [
-      ...middle['right'],   // Middle-right
-      right , top,          // Top-right
-      left  , top,          // Top-left
-      ...middle['left'],    // Middle-left
-      left  , bottom,       // Bottom-left
-      right , bottom,       // Bottom-rieght
+      ...middle.right,  ...this.getRgba(),        // Middle-right
+      right , top,      ...this.getRgba(),        // Top-right
+      left  , top,      ...this.getRgba(),        // Top-left
+      ...middle.left,   ...this.getRgba(),        // Middle-left
+      left  , bottom,   ...this.getRgba(false),   // Bottom-left
+      right , bottom,   ...this.getRgba(false),   // Bottom-rieght
     ];
   }
 
-  display() {
+  getRgba(lighter = true) {
+    let {R, G, B} = this.color;
+    let opacity = (lighter) ? 0.15 : 1;
+    return [R, G, B, opacity];
+  }
+
+  display(data = {}) {
     const vertices = this.vertices;
+
+    this.gl.useProgram(this.shaderProgram);
 
     // Definisikan buffer untuk vertices
     const positionBuffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer);
     this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), this.gl.STATIC_DRAW);
   
-    const vertextShaderCode =`
-      attribute vec2 a_Position;
-      void main(){
-          gl_Position = vec4(a_Position, 0.0, 1.0);
-          gl_PointSize = 20.0;
-      }
-    `;
-  
-    const vertexShader = this.gl.createShader(this.gl.VERTEX_SHADER);
-    this.gl.shaderSource(vertexShader, vertextShaderCode);
-    this.gl.compileShader(vertexShader);
-  
-    // Definisi fragment
-    const fragmentShaderCode = `
-      void main(){
-          gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
-      }
-    `;
-  
-    const fragmentShader = this.gl.createShader(this.gl.FRAGMENT_SHADER);
-    this.gl.shaderSource(fragmentShader, fragmentShaderCode);
-    this.gl.compileShader(fragmentShader);
-  
-    // Definisi shader program
-    const shaderProgram = this.gl.createProgram();
-    this.gl.attachShader(shaderProgram, vertexShader);
-    this.gl.attachShader(shaderProgram, fragmentShader);
-    this.gl.linkProgram(shaderProgram);
-    this.gl.useProgram(shaderProgram);
-  
     // Bind buffer
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer);
-    const aPosition = this.gl.getAttribLocation(shaderProgram, "a_Position");
-    this.gl.vertexAttribPointer(aPosition, 2, this.gl.FLOAT, false, 0, 0);
+
+    // Set aPosition
+    const aPosition = this.gl.getAttribLocation(this.shaderProgram, "a_Position");
+    this.gl.vertexAttribPointer(aPosition, 2, this.gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 0);
     this.gl.enableVertexAttribArray(aPosition);
-  
-    this.gl.clearColor(1.0, 1.0, 1.0, 1);
-    this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+
+    // Set aColor
+    const aColor = this.gl.getAttribLocation(this.shaderProgram, "aColor");
+    this.gl.vertexAttribPointer(
+        aColor,
+        4,
+        this.gl.FLOAT,
+        false,
+        6 * Float32Array.BYTES_PER_ELEMENT,
+        2 * Float32Array.BYTES_PER_ELEMENT,
+    );
+    this.gl.enableVertexAttribArray(aColor);
+
+    if (data && Object.keys(data).length > 0) {
+      if (data.delta[1] >= 1 - this.height.top/2 
+        || data.delta[1] <= -1 + this.height.bottom/2
+      ) {
+        data.deltaY[0] = -data.deltaY[0];
+      } 
+      data.delta[1] += data.deltaY[0];
+      this.gl.uniform2fv(data.uDelta, data.delta);
+    }
     this.gl.drawArrays(this.gl.TRIANGLE_FAN, 0, 6);
   }
 }
