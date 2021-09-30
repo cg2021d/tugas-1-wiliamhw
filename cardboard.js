@@ -8,32 +8,57 @@ class Cardboard
     this.height = data.height;
     this.curveWidth = data.curveWidth;
     this.color = data.color;
-  }
+    this.direction = data.direction
 
-  get vertices() {
-    const right = this.center.x + this.width/2;
-    const left = this.center.x - this.width/2;
-    const top = this.center.y + this.height.top/2;
-    const bottom = this.center.y - this.height.bottom/2;
-    const middle = {
+    this.right = this.center.x + this.width/2;
+    this.left = this.center.x - this.width/2;
+    this.top = this.center.y + this.height.top;
+    this.bottom = this.center.y - this.height.bottom;
+    this.middle = {
       right: [this.center.x + this.width/2 + this.curveWidth, this.center.y],
       left : [this.center.x - this.width/2 - this.curveWidth, this.center.y],
     }
+  }
 
+  get vertices() {
     return [
-      ...middle.right,  ...this.getRgba(),        // Middle-right
-      right , top,      ...this.getRgba(),        // Top-right
-      left  , top,      ...this.getRgba(),        // Top-left
-      ...middle.left,   ...this.getRgba(),        // Middle-left
-      left  , bottom,   ...this.getRgba(false),   // Bottom-left
-      right , bottom,   ...this.getRgba(false),   // Bottom-rieght
+      ...this.middle.right,       ...this.getRgba(),        // Middle-right
+      this.right , this.top,      ...this.getRgba(),        // Top-right
+      this.left  , this.top,      ...this.getRgba(),        // Top-left
+      ...this.middle.left,        ...this.getRgba(),        // Middle-left
+      this.left  , this.bottom,   ...this.getRgba(false),   // Bottom-left
+      this.right , this.bottom,   ...this.getRgba(false),   // Bottom-rieght
     ];
   }
 
-  getRgba(lighter = true) {
-    let {R, G, B} = this.color;
-    let opacity = (lighter) ? 0.15 : 1;
+  get topMiddleLines() {
+    if (this.direction === 'horizontal') {
+      const y = this.center.y + this.height.top/2;
+      return  [
+        this.middle.left[0] + this.curveWidth/2 , y, ...this.getRgba(false, 0.5),
+        this.middle.right[0] - this.curveWidth/2, y, ...this.getRgba(false, 0.5),
+      ];
+    } 
+    return [
+      this.center.x, this.center.y, ...this.getRgba(false, 0.5),
+      this.center.x, this.top     , ...this.getRgba(false, 0.5),
+    ]
+  }
+
+  getRgba(lighter = true, op = 1) {
+    let {R, G, B} = this.color[(lighter) ? 'light' : 'dark'];
+    let opacity = (lighter) ? 0.7 : op;
     return [R, G, B, opacity];
+  }
+
+  makeTopBorder(positionBuffer) {
+    const vertices = [
+      this.right , this.top, ...this.getRgba(false, 0.45),   // Top-right
+      this.left  , this.top, ...this.getRgba(false, 0.45),   // Top-left
+      ...this.middle.left,   ...this.getRgba(false, 0.5125),   // Middle-left
+      ...this.middle.right,  ...this.getRgba(false, 0.5125),   // Middle-right
+    ];
+    makeLine(this.gl, vertices, 4, positionBuffer);
   }
 
   display(data = {}) {
@@ -67,8 +92,8 @@ class Cardboard
     this.gl.enableVertexAttribArray(aColor);
 
     if (data && Object.keys(data).length > 0) {
-      if (data.delta[1] >= 1 - this.height.top/2 
-        || data.delta[1] <= -1 + this.height.bottom/2
+      if (data.delta[1] >= 1 - this.top
+        || data.delta[1] <= -1 - this.bottom
       ) {
         data.deltaY[0] = -data.deltaY[0];
       } 
@@ -76,7 +101,17 @@ class Cardboard
       this.gl.uniform2fv(data.uDelta, data.delta);
     }
     this.gl.drawArrays(this.gl.TRIANGLE_FAN, 0, 6);
+
+    makeLine(this.gl, this.topMiddleLines, 2, positionBuffer);
+    this.makeTopBorder(positionBuffer);
   }
+}
+
+function makeLine(gl, vertices, verticesAmount, positionBuffer)
+{
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+  gl.drawArrays(gl.LINE_LOOP, 0, verticesAmount);
 }
 
 export { Cardboard };
