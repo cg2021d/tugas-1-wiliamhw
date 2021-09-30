@@ -2,9 +2,8 @@
 Nama: William Handi Wijaya  
 NRP: 05111940000087  
 Barang: Dus  
-Menampilkan foto dus bagian kanan atas di sisi kiri dan foto dus bagian depan atas
-di sisi kanan
 
+# Foto
 ### Depan Atas
 ![depan](img/depan.jpg)
 
@@ -16,3 +15,10 @@ di sisi kanan
 
 ### Kanan Atas
 ![kanan](img/kanan.jpg)
+
+# Hasil
+Menampilkan:  
+* foto dus bagian kanan-atas di sisi kiri  
+* foto dus bagian depan-atas di sisi kanan  
+
+![depan](img/hasil.jpg)
