@@ -3,9 +3,6 @@ import { Cardboard } from './cardboard.js';
 const canvas = document.getElementById("myCanvas");
 const gl = canvas.getContext("webgl");
 
-gl.clearColor(1.0, 1.0, 1.0, 1);
-gl.clear(gl.COLOR_BUFFER_BIT);
-
 const shaderProgramLeft = initShader(gl);
 const shaderProgramRight = initShader(gl);
 
@@ -51,8 +48,13 @@ const cardboardRight = new Cardboard(
 const uDelta = gl.getUniformLocation(shaderProgramRight, "uDelta");
 let delta = [0.0, 0.0];
 let deltaY = [0.0087]; // Pass by reference to cardboard.display method
+const colorHelper = 33/255;
 
 function render() {
+  // Set Background Color
+  gl.clearColor(colorHelper, colorHelper, colorHelper, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
   cardboardLeft.display();
   cardboardRight.display({uDelta, delta, deltaY});
   requestAnimationFrame(render);
