@@ -10,7 +10,6 @@
         <option value="pLight">Point Light</option>
         <option value="hLight">Hemisphere Light</option>
         <option value="sLight">Spotlight</option>
-        <option value="rLight">RectArea Light</option>
         <option value="none">Disable Light</option>
     </select>
 </body>
@@ -32,13 +31,20 @@ const minAcc = -0.01;
 
 function turnOnLight(lightName) {
     if (lightOn !== '' || lightName === 'none') {
-        lights[lightOn].visible = false;
+        setLight(lightOn, false);
         lightOn = '';
-
         if (lightName === 'none') return;
     }
-    lights[lightName].visible = true;
+    setLight(lightName, true);
     lightOn = lightName;
+}
+
+function setLight(lightName, isOn)
+{
+    lights[lightName][0].visible = isOn;
+    if (lights[lightName][1] != null) {
+        lights[lightName][1].visible = isOn;
+    }   
 }
 
 function getRandomFloat() {
@@ -50,7 +56,7 @@ function getRandomFloat() {
 const init = function() {
     // 1. create the scene
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x151515);
+    scene.background = new THREE.Color(0x2a4158);
        
     // 2. create and locate the camera       
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -59,8 +65,15 @@ const init = function() {
     // create light
     for (let key in createLight) {
         lights[key] = createLight[key]();
-        scene.add(lights[key]);
-        lights[key].visible = false;
+
+        
+        // Remove light helper if it is null
+        if (lights[key][1] == null) {
+            lights[key].pop();
+        }
+        scene.add(...lights[key]);
+
+        setLight(key, false);
     }
     turnOnLight(Object.keys(lights)[0]);
 

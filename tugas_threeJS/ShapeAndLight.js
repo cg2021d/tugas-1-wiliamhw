@@ -83,39 +83,68 @@ const createShape = {
         cylinder.position.set(0, -2, 0);
         return cylinder;
     },
+    icosahedron: () => {
+        const geometry   = new THREE.IcosahedronGeometry(0.5)
+        const material   = new THREE.MeshDepthMaterial()
+        const octahedron = new THREE.Mesh(geometry, material);
+        octahedron.position.set(4, 2, 0);
+        return octahedron;
+    },
+    ring: () => {
+        const geometry = new THREE.RingGeometry( 0.2, 0.5, 32 );
+        const material = new THREE.MeshToonMaterial( { color: 0xffff00 } );
+        const ring = new THREE.Mesh( geometry, material );
+        ring.position.set(4, -2, 0);
+        return ring;
+    },
+    torusKnot: () => {
+        const geometry = new THREE.TorusKnotGeometry( 0.4, 0.05, 100, 16 );
+        const material =new THREE.MeshToonMaterial({ color: 0xC89595 });
+        const torusKnot = new THREE.Mesh( geometry, material );
+        torusKnot.position.set(-4, 2, 0);
+        return torusKnot;
+    },
+    dedocahedron: () => {
+        const geometry   = new THREE.DodecahedronGeometry(0.5)
+        const material   = new THREE.MeshToonMaterial({ color: 0xDDBEBE, wireframe: true })
+        const dedocahedron = new THREE.Mesh(geometry, material);
+        dedocahedron.position.set(-4, -2, 0);
+        return dedocahedron;
+    },
 };
 
 const createLight = {
     dLight: () => {
         const dLight = new THREE.DirectionalLight(0xffffff, 1);
-        dLight.position.set(1, 0, 1).normalize();
-        return dLight;
+        dLight.position.set(5, 5, -5);
+
+        const lightHelper = new THREE.DirectionalLightHelper(dLight);
+        return [dLight, lightHelper];
     },
     aLight: () => {
         const aLight = new THREE.AmbientLight(0xffffff, 1);
-        aLight.position.set(0, 0, 10);
-        return aLight;
+        return [aLight, null];
     },
     pLight: () => {
         const pLight = new THREE.PointLight(0xffffff, 1, 100);
-        pLight.position.set(-10, 0, 0);
-        return pLight;
+        pLight.position.set(5, 5, -5);
+
+        const lightHelper = new THREE.PointLightHelper(pLight);
+        return [pLight, lightHelper];
     },
     hLight: () => {
         const hLight = new THREE.HemisphereLight(0xffffff, '#ffb703', 0.8);
-        hLight.position.set(-10, 10, 20);
-        return hLight;
+        hLight.position.set(5, 5, -5);
+
+        const lightHelper = new THREE.HemisphereLightHelper(hLight);
+        return [hLight, lightHelper];
     },
     sLight: () => {
         const sLight = new THREE.SpotLight(0xffffff, 1, 50);
-        sLight.position.set(5, 10, 10);
-        return sLight;
-    },
-    rLight: () => {
-        const rectLight = new THREE.RectAreaLight( 0xffffff, 0.5,  0.5, 0.5 );
-        rectLight.position.set( 5, 5, 0 );
-        rectLight.lookAt( 0, 0, 0 );
-        return rectLight;
+        sLight.position.set(5, 5, -5);
+
+        const lightHelper = new THREE.SpotLightHelper(sLight);
+        return [sLight, lightHelper];
     },
 };
 
