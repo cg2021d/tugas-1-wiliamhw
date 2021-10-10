@@ -64,6 +64,12 @@ function addStar() {
     scene.add(star);
 }
 
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize( window.innerWidth, window.innerHeight );
+}, false);
+
 // set up the environment - 
 // initiallize scene, camera, objects and renderer
 const init = function() {
