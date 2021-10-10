@@ -19,12 +19,16 @@
 
 <script type="module">    
 import { THREE, createShape, createLight } from './ShapeAndLight.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 let scene, camera, renderer;
 let geometries = {};
 let acc = {};
 let lights = {};
 let lightOn = '';
+
+const maxAcc = 0.01;
+const minAcc = -0.01;
 
 function turnOnLight(lightName) {
     if (lightOn !== '' || lightName === 'none') {
@@ -38,7 +42,7 @@ function turnOnLight(lightName) {
 }
 
 function getRandomFloat() {
-    return Math.random() * (0.01 - 0.001) + 0.001;
+    return Math.random() * (maxAcc - minAcc) + minAcc;
 }
 
 // set up the environment - 
@@ -63,16 +67,21 @@ const init = function() {
     // create light selector
     const selectedLight = document.getElementById('light');
     selectedLight.addEventListener('change', (e) => turnOnLight(e.target.value));
+
+    // create grid helper
+    const gridHelper = new THREE.GridHelper(200, 50);
+    scene.add(gridHelper);
        
     // 3. create an locate the object on the scene        
     for (let key in createShape) {
         geometries[key] = createShape[key]();
         scene.add(geometries[key]);
 
-        // create random acceleration for each axis
+        // create random acceleration for each axis (x, y, z)
         acc[key] = [
             (Math.abs(geometries[key].position.x) < 2) ? getRandomFloat() : 0,
             (Math.abs(geometries[key].position.y) < 2) ? getRandomFloat() : 0,
+            2*getRandomFloat(),
         ]; 
     }
        
@@ -95,16 +104,20 @@ const mainLoop = function() {
         // Bounce object
         if (shape.position.x >= 0.98 || shape.position.x <= -0.98) acc[key][0] *= -1;
         if (shape.position.y >= 0.98 || shape.position.y <= -0.98) acc[key][1] *= -1;
+        if (shape.position.z >= 1 || shape.position.z <= -1) acc[key][2] *= -1;
 
         // Move shape
         shape.position.x += acc[key][0];
         shape.position.y += acc[key][1];
+        shape.position.z += acc[key][2];
     }
+    controls.update();
     requestAnimationFrame(mainLoop);
 };
     
 ///////////////////////////////////////////////
 init();
+var controls = new OrbitControls(camera, renderer.domElement);
 mainLoop();
 </script>
     
