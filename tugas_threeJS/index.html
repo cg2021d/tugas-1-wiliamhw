@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Document</title>
+</head>
+<body>
+    <select name="light" id="light">
+        <option value="dLight">Directional Light</option>
+        <option value="aLight">Ambient Light</option>
+        <option value="pLight">Point Light</option>
+        <option value="hLight">Hemisphere Light</option>
+        <option value="sLight">Spotlight</option>
+        <option value="rLight">RectArea Light</option>
+        <option value="none">Disable Light</option>
+    </select>
+</body>
+</html>
+
+
+<script type="module">    
+import { THREE, createShape, createLight } from './ShapeAndLight.js';
+
+let scene, camera, renderer;
+let geometries = {};
+let acc = {};
+let lights = {};
+let lightOn = '';
+
+function turnOnLight(lightName) {
+    if (lightOn !== '' || lightName === 'none') {
+        lights[lightOn].visible = false;
+        lightOn = '';
+
+        if (lightName === 'none') return;
+    }
+    lights[lightName].visible = true;
+    lightOn = lightName;
+}
+
+function getRandomFloat() {
+    return Math.random() * (0.01 - 0.001) + 0.001;
+}
+
+// set up the environment - 
+// initiallize scene, camera, objects and renderer
+const init = function() {
+    // 1. create the scene
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x151515);
+       
+    // 2. create and locate the camera       
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 5;
+
+    // create light
+    for (let key in createLight) {
+        lights[key] = createLight[key]();
+        scene.add(lights[key]);
+        lights[key].visible = false;
+    }
+    turnOnLight(Object.keys(lights)[0]);
+
+    // create light selector
+    const selectedLight = document.getElementById('light');
+    selectedLight.addEventListener('change', (e) => turnOnLight(e.target.value));
+       
+    // 3. create an locate the object on the scene        
+    for (let key in createShape) {
+        geometries[key] = createShape[key]();
+        scene.add(geometries[key]);
+
+        // create random acceleration for each axis
+        acc[key] = [getRandomFloat(), getRandomFloat()]; 
+    }
+       
+    // 4. create the renderer     
+    renderer = new THREE.WebGLRenderer();   
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    
+    document.body.appendChild(renderer.domElement); 
+};
+  
+    
+// main animation loop - calls 50-60 in a second.
+const mainLoop = function() {
+    renderer.render(scene, camera);
+    for (let key in geometries) {
+        let shape = geometries[key];
+        shape.rotation.x += 0.01;
+        shape.rotation.y += 0.01;
+
+        // Bounce object
+        if (shape.position.x >= 0.98 || shape.position.x <= -0.98) acc[key][0] *= -1;
+        if (shape.position.y >= 0.98 || shape.position.y <= -0.98) acc[key][1] *= -1;
+
+        // Move shape
+        shape.position.x += acc[key][0];
+        shape.position.y += acc[key][1];
+    }
+    requestAnimationFrame(mainLoop);
+};
+    
+///////////////////////////////////////////////
+init();
+mainLoop();
+</script>
+    
