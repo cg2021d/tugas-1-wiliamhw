@@ -70,7 +70,10 @@ const init = function() {
         scene.add(geometries[key]);
 
         // create random acceleration for each axis
-        acc[key] = [getRandomFloat(), getRandomFloat()]; 
+        acc[key] = [
+            (Math.abs(geometries[key].position.x) < 2) ? getRandomFloat() : 0,
+            (Math.abs(geometries[key].position.y) < 2) ? getRandomFloat() : 0,
+        ]; 
     }
        
     // 4. create the renderer     
