@@ -1,19 +1,26 @@
 import * as THREE from 'three';
 
 const createShape = {
-    cube: () => {
-        const geometry  = new THREE.BoxGeometry( 1, 1, 1 );
-        const material  = new THREE.MeshBasicMaterial({ wireframe: true, color: 0x00a1cb })
-        const cone      = new THREE.Mesh( geometry, material );
-        cone.position.set(-4, 0, 0);
-        return cone;
+    avatar: () => {
+        const kleeTexture = new THREE.TextureLoader().load('klee.jpg');
+        const geometry    = new THREE.BoxGeometry( 1, 1, 1 );
+        const material    = new THREE.MeshBasicMaterial({ map: kleeTexture })
+        const avatar      = new THREE.Mesh( geometry, material );
+        avatar.position.set(-4, 0, 0);
+        return avatar;
     },
-    sphere: () => {
-        const geometry  = new THREE.SphereGeometry(0.5, 32, 32)
-        const material  = new THREE.MeshLambertMaterial({ color: 0xfcffa6 })
-        const sphere    = new THREE.Mesh(geometry, material);
-        sphere.position.set(0, 0, 0);
-        return sphere
+    moon: () => {
+        const moonTexture = new THREE.TextureLoader().load('moon.jpg');
+        const normalTexture = new THREE.TextureLoader().load('normal.jpg');
+
+        const geometry  = new THREE.SphereGeometry(0.75, 32, 32)
+        const material  = new THREE.MeshStandardMaterial({
+            map: moonTexture,
+            normalMap: normalTexture,
+        });
+        const moon      = new THREE.Mesh(geometry, material);
+        moon.position.set(0, 0, 0);
+        return moon
     },
     cone: () => {
         const geometry  = new THREE.ConeGeometry(0.5, 1, 32)
@@ -116,7 +123,7 @@ const createShape = {
 const createLight = {
     dLight: () => {
         const dLight = new THREE.DirectionalLight(0xffffff, 1);
-        dLight.position.set(5, 5, -5);
+        dLight.position.set(5, 5, 5);
 
         const lightHelper = new THREE.DirectionalLightHelper(dLight);
         return [dLight, lightHelper];
@@ -127,21 +134,21 @@ const createLight = {
     },
     pLight: () => {
         const pLight = new THREE.PointLight(0xffffff, 1, 100);
-        pLight.position.set(5, 5, -5);
+        pLight.position.set(5, 5, 5);
 
         const lightHelper = new THREE.PointLightHelper(pLight);
         return [pLight, lightHelper];
     },
     hLight: () => {
         const hLight = new THREE.HemisphereLight(0xffffff, '#ffb703', 0.8);
-        hLight.position.set(5, 5, -5);
+        hLight.position.set(5, 5, 5);
 
         const lightHelper = new THREE.HemisphereLightHelper(hLight);
         return [hLight, lightHelper];
     },
     sLight: () => {
         const sLight = new THREE.SpotLight(0xffffff, 1, 50);
-        sLight.position.set(5, 5, -5);
+        sLight.position.set(5, 5, 5);
 
         const lightHelper = new THREE.SpotLightHelper(sLight);
         return [sLight, lightHelper];
