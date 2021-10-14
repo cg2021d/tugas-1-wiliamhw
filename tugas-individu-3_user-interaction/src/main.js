@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-console.log(1);
 
 /**
  * Variable definition
@@ -19,7 +18,6 @@ const colors = [
     0xB1E693,
     0x911F27,
 ];
-const clock = new THREE.Clock();
 
 /**
  * Main
@@ -31,7 +29,7 @@ const init = () => {
     scene.background = spaceTexture;
 
     // create and locate the camera  
-    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.set(0.640, 0.8337, 0.694);
 
     // create canvas
@@ -41,7 +39,12 @@ const init = () => {
     document.body.appendChild(renderer.domElement); 
 
     // create 30 cubes and auto generates it at some interval
-    autoGenerateCubes(30);
+    autoGenerateCubes(50);
+
+    // add light
+    const dLight = new THREE.DirectionalLight(0xffffff, 1);
+    dLight.position.set(1,-1,-1);
+    scene.add(dLight);
 
     // create orbit control
     controls = new OrbitControls(camera, renderer.domElement);
@@ -65,8 +68,8 @@ const mainLoop = () => {
  * Generate cubes
  */
 const addCube = () => {
-    const geometry = new THREE.BoxGeometry( 3, 3, 3 );
-    const material = new THREE.MeshBasicMaterial({ color: getRandomColor() });
+    const geometry = new THREE.BoxGeometry( 3, 3, 3, 5, 5, 5 );
+    const material = new THREE.MeshToonMaterial({ color: getRandomColor() });
     const cubeMesh = new THREE.Mesh( geometry, material );
     cubeMesh.position.set(getRandomFloat(-10, 30), getRandomFloat(-10, 30), getRandomFloat(-10, 30));
     scene.add(cubeMesh);
@@ -75,8 +78,10 @@ const addCube = () => {
 };
 
 const autoGenerateCubes = (num = 5) => {
-    Array(num).fill(0).forEach(addCube);
-    console.log('cube added')
+    if (cubesCount <= 50) {
+        Array(num).fill(0).forEach(addCube);
+        console.log('cube added')
+    }
     setTimeout(autoGenerateCubes, speed);
 };
 
@@ -87,14 +92,15 @@ const deselect = () => {
     if (selected == null) return;
     selected.obj.material.color.setHex(selected.init_color);
     selected = null;
-}
+};
 
 const dispose = (object) => {
     object.geometry.dispose();
     object.material.dispose();
     scene.remove(object);
     renderer.renderLists.dispose();
-}
+    cubesCount -= 2;
+};
 
 const toggleColor = () => {
     if (selected) {
@@ -158,7 +164,7 @@ const evaluateObject = (conObject) => {
         console.log('wrong');
     }
     deselect();
-}
+};
 
 /**
  * Helper
