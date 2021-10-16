@@ -3,9 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script type="module" src="./main.js" defer></script>
+    <link rel="stylesheet" href="./styles.css">
+    <script type="module" src="./script.js" defer></script>
     <title>Grafkom | User Interaction</title>
 </head>
-<body> 
+<body>
+    <canvas class="webgl"></canvas>
+    <div id="leaderboard">
+        <div id="score">
+            <p>Score: <span id="score-val">0</span></p>
+        </div>
+        <div id="highscore">
+            <p>Highscore: <span id="highscore-val">0</span></p>
+        </div>
+    </div>
 </body>
 </html>

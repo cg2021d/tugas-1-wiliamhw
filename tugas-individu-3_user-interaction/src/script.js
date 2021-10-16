@@ -1,20 +1,24 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
+
 /**
  * Variable definition
  */
 let scene, camera, renderer, controls;
-let cubesCount = 0;
 let rayCast, mouse;
-let selected;
+let selected, highscore, score;
+let cubesCount = 0;
 let speed = 10000; // auto generate cube in milisecond
 
+const speedAcc = 250;
+const minSpeed = 2000;
+const maxCube = 200;
 const colors = [
     0xA8D8EA,
     0xAA96DA,
     0xFCBAD3,
-    0xFFFFD2,
+    0xFFE699,
     0xB1E693,
     0x911F27,
 ];
@@ -23,20 +27,25 @@ const colors = [
  * Main
  */
 const init = () => {
+    // load html element
+    const canvas = document.querySelector('.webgl');
+    highscore = document.querySelector('#highscore-val');
+    score = document.querySelector('#score-val');
+
     // create scene and its background
     scene = new THREE.Scene();
     const spaceTexture = new THREE.TextureLoader().load('./assets/space.jpg');
     scene.background = spaceTexture;
 
     // create and locate the camera  
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0.640, 0.8337, 0.694);
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
+    camera.position.z = 50;
+    camera.position.y = 15;
 
     // create canvas
-    renderer = new THREE.WebGLRenderer();
+    renderer = new THREE.WebGLRenderer({ canvas });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    document.body.appendChild(renderer.domElement); 
 
     // create 30 cubes and auto generates it at some interval
     autoGenerateCubes(50);
@@ -71,16 +80,17 @@ const addCube = () => {
     const geometry = new THREE.BoxGeometry( 3, 3, 3, 5, 5, 5 );
     const material = new THREE.MeshToonMaterial({ color: getRandomColor() });
     const cubeMesh = new THREE.Mesh( geometry, material );
-    cubeMesh.position.set(getRandomFloat(-10, 30), getRandomFloat(-10, 30), getRandomFloat(-10, 30));
+    cubeMesh.position.set(getRandomFloat(-20, 20), getRandomFloat(-20, 20), getRandomFloat(-20, 20));
     scene.add(cubeMesh);
     cubesCount += 1;
     return cubeMesh;
 };
 
-const autoGenerateCubes = (num = 5) => {
-    if (cubesCount <= 50) {
+const autoGenerateCubes = (num = 4) => {
+    if (cubesCount <= maxCube - num) {
         Array(num).fill(0).forEach(addCube);
-        console.log('cube added')
+        if (speed >= minSpeed + speedAcc) speed -= speedAcc;
+        console.log('Cube added. Current cube amount: ' + cubesCount);
     }
     setTimeout(autoGenerateCubes, speed);
 };
@@ -99,10 +109,9 @@ const dispose = (object) => {
     object.material.dispose();
     scene.remove(object);
     renderer.renderLists.dispose();
-    cubesCount -= 2;
 };
 
-const toggleColor = () => {
+const toggleColor = (once = false) => {
     if (selected) {
         const currentColor = selected.obj.material.color.getHex();
         selected.obj.material.color.setHex(
@@ -111,6 +120,7 @@ const toggleColor = () => {
             : 0xffffff
         );
     }
+    if (once) return;
     setTimeout(toggleColor, 500);
 };
 
@@ -143,6 +153,7 @@ document.addEventListener("click", (e) => {
         obj: firstObject,
         init_color: firstObject.material.color.getHex(),
     });
+    toggleColor(true);
     
 });
 
@@ -150,19 +161,26 @@ const evaluateObject = (conObject) => {
     if (selected.obj.uuid === conObject.uuid) {
         return;
     }
+
     const first  = selected.init_color;
     const second = conObject.material.color.getHex();
 
-    console.log(first);
-    console.log(second);
-
+    const currentScore = parseInt(score.textContent);
+    const highScore = parseInt(highscore.textContent);
+    let newScore;
+    
     if (first === second) {
         dispose(selected.obj);
         dispose(conObject);
+        cubesCount -= 2;
+        newScore = currentScore + 50;
         console.log('correct');
     } else {
+        newScore = currentScore - 25;
         console.log('wrong');
     }
+    score.textContent = '' + ((newScore >= 0) ? newScore : 0);
+    highscore.textContent = '' + ((newScore > highScore) ? newScore : highScore);
     deselect();
 };
 
@@ -176,13 +194,21 @@ const evaluateObject = (conObject) => {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 }, false);
 
-const getRandomFloat = (max, min) => {
-    return Math.random() * (max - min) + max;
+const getRandomFloat = (min, max) => {
+    return Math.random() * (max - min) + min;
 };
 
 const getRandomColor = () => {
     return colors[Math.floor(Math.random()*colors.length)];
 };
+
+document.addEventListener('mousedown', () => {
+    document.querySelector('html').classList.toggle('cursor');
+});
+
+document.addEventListener('mouseup', () => {
+    document.querySelector('html').classList.toggle('cursor');
+});
 
 /** 
  * Runner
