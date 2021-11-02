@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Tugas 4 Three JS</title>
+</head>
+<body>
+
+<script src="js/three.min.js"></script>
+<script src="js/controls/OrbitControls.js"></script>
+<script src="https://cdn.rawgit.com/mrdoob/three.js/r133/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.rawgit.com/mrdoob/three.js/r133/examples/js/loaders/OBJLoader.js"></script>
+<script>
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize( window.innerWidth, window.innerHeight );
+    }, false);
+
+    let scene, renderer, light, camera, cube, controls;
+    let lightAdder = 0.1;
+
+    function init() {
+        // Scene
+        scene = new THREE.Scene();
+
+        // Camera
+        camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 1, 1000);
+        camera.position.z = 5;
+
+        // Fog
+        scene.fog = new THREE.Fog(0xFFFFFF, 7, 12);
+
+        // Renderer
+        renderer = new THREE.WebGLRenderer({antialias:true});
+        renderer.setSize(window.innerWidth,window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMapType = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+
+        // Orbit Control
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+        // Panorama
+        const bgLoader = new THREE.TextureLoader();
+        const bgTexture = bgLoader.load('images/panorama.jpg', () => {
+            const rt = new THREE.WebGLCubeRenderTarget(bgTexture.image.height);
+            rt.fromEquirectangularTexture(renderer, bgTexture);
+            scene.background = rt.texture;
+        });
+
+        // Realistic refelective
+        bgTexture.mapping = THREE.EquirectangularReflectionMapping;
+        bgTexture.encoding = THREE.sRGBEncoding;
+
+        const sphereGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+        const sphereMaterial = new THREE.MeshBasicMaterial({
+            envMap: bgTexture,
+        });
+        const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        sphere.position.set(-4, 0, 0);
+        sphere.castShadow = true;
+        scene.add(sphere);
+
+        // Cube
+        let cubeGeometry = new THREE.BoxGeometry (1,1,1);
+        let cubeMaterial = new THREE.MeshBasicMaterial({
+            map: new THREE.TextureLoader().load('images/rock.jpg'),
+        });
+        cube = new THREE.Mesh (cubeGeometry, cubeMaterial);
+        cube.castShadow = true;
+        cube.position.set(4, 0, 0);
+        scene.add(cube);
+
+        // Wall
+        const planeGeometry = new THREE.PlaneGeometry(25, 15);
+        const planeMaterial = new THREE.MeshPhongMaterial({color: 0xffffff, transparent: true, opacity: 0.3});
+        const plane = new THREE.Mesh (planeGeometry, planeMaterial);
+        plane.receiveShadow  = true;
+        plane.rotation.x = -Math.PI/50;
+        plane.position.set(0, 0, -2);
+        scene.add(plane);
+
+        // Light
+        light = new THREE.PointLight(0xffffff);
+        light.castShadow = true;
+        light.position.set(5, 0, 12);
+        light.shadow.mapSize.width = 1024;
+        light.shadow.mapSize.height = 1024;
+        scene.add(light);
+
+        const helper = new THREE.PointLightHelper(light);
+        scene.add( helper );
+
+        // Obj loader
+        const objLoader = new THREE.OBJLoader();
+        objLoader.load('obj/IronMan.obj',(root) => {
+            root.scale.set(0.023, 0.023, 0.023);
+            root.position.set(0, -2.5, 1);
+            root.traverse((child) => {
+                if (child instanceof THREE.Mesh) {
+                    child.castShadow = true;
+                }
+            });
+            scene.add(root);
+        });
+    }
+
+    function render()
+    {
+        renderer.render(scene, camera);
+        controls.update();
+        
+        cube.rotation.y += 0.01; 
+        cube.rotation.x += 0.01;
+
+        if (light.position.x > 15 || light.position.x < -15) lightAdder *= -1;
+        light.position.x += lightAdder;
+
+
+        requestAnimationFrame(render);
+    }
+
+    init();
+    render();
+</script>
+</body>
+</html>
